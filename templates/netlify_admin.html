@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netlify Admin | ALAMIN HOSTING</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background: #0c0e14; color: #fff; font-family: 'Segoe UI', sans-serif; }
+        .card { background:#12141c; border:1px solid #2a2d37; border-radius:12px; }
+        .card:hover { border-color:#06b6d4; }
+        .stat-card { background:#12141c; border:1px solid #1e2130; border-radius:12px; padding:16px; transition:all 0.3s; }
+        .stat-card:hover { border-color:#06b6d4; transform:translateY(-2px); }
+        .toast-container { position:fixed; bottom:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px; }
+        .toast { background:#1a1d27; border:1px solid #2a2d37; border-radius:12px; padding:14px 18px; min-width:300px; display:flex; align-items:center; gap:12px; box-shadow:0 10px 40px rgba(0,0,0,0.5); animation:slideIn 0.3s; }
+        .toast.success { border-left:4px solid #10b981; }
+        .toast.error { border-left:4px solid #ef4444; }
+        .toast.info { border-left:4px solid #06b6d4; }
+        .toast.warning { border-left:4px solid #f59e0b; }
+        @keyframes slideIn { from{transform:translateX(400px);opacity:0} to{transform:translateX(0);opacity:1} }
+        .badge { display:inline-block; padding:2px 8px; border-radius:6px; font-size:10px; font-weight:700; }
+        .badge-green { background:#10b98120; color:#10b981; border:1px solid #10b98140; }
+        .badge-red { background:#ef444420; color:#ef4444; border:1px solid #ef444440; }
+        .badge-yellow { background:#f59e0b20; color:#f59e0b; border:1px solid #f59e0b40; }
+        .badge-cyan { background:#06b6d420; color:#06b6d4; border:1px solid #06b6d440; }
+        .progress-bar { width:100%; height:6px; background:#1a1d27; border-radius:3px; overflow:hidden; margin-top:4px; }
+        .progress-fill { height:100%; transition:width 0.3s; }
+
+        .cred-box {
+            background: #0a0e1a;
+            border: 1px solid #3b82f640;
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+        @media (max-width: 768px) {
+            .cred-box { grid-template-columns: 1fr; }
+        }
+        .cred-item {
+            background: #12141c;
+            border: 1px solid #2a2d37;
+            border-radius: 6px;
+            padding: 8px 10px;
+        }
+        .cred-label {
+            font-size: 9px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
+        }
+        .cred-value {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #fbbf24;
+            font-weight: bold;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .cred-value.password {
+            color: #ef4444;
+        }
+        .cred-value.link {
+            color: #67e8f9;
+            font-size: 10px;
+        }
+        .btn-mini {
+            background: #2a2d37;
+            color: #d1d5db;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-left: 6px;
+            transition: all 0.2s;
+        }
+        .btn-mini:hover { background: #3b82f6; color: #fff; }
+
+        .server-link-box {
+            background: #0a0e1a;
+            border: 1px solid #06b6d440;
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+            flex-wrap: wrap;
+        }
+        .server-link-box:hover { border-color: #06b6d4; }
+        .server-link-url {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #67e8f9;
+            flex: 1;
+            min-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .btn-copy {
+            background: #06b6d420;
+            color: #06b6d4;
+            border: 1px solid #06b6d440;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-copy:hover { background: #06b6d440; color: #fff; }
+        .btn-visit {
+            background: #10b98120;
+            color: #10b981;
+            border: 1px solid #10b98140;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+        .btn-visit:hover { background: #10b98140; color: #fff; }
+
+        .control-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .control-btn:active { transform: scale(0.95); }
+        .control-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-start { background: #10b981; color: #fff; }
+        .btn-start:hover:not(:disabled) { background: #059669; }
+        .btn-stop { background: #ef4444; color: #fff; }
+        .btn-stop:hover:not(:disabled) { background: #dc2626; }
+        .btn-restart { background: #f59e0b; color: #fff; }
+        .btn-restart:hover:not(:disabled) { background: #d97706; }
+
+        .bulk-bar {
+            background: linear-gradient(135deg, #1a1d27, #12141c);
+            border: 1px solid #06b6d440;
+            border-radius: 12px;
+            padding: 14px 18px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <header class="h-16 bg-[#12141c] border-b border-gray-800 flex items-center px-6 justify-between sticky top-0 z-10">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-red-700">
+                <i class="fas fa-shield-alt text-white"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-black">NETLIFY <span class="text-red-500">ADMIN</span></h1>
+                <p class="text-[10px] text-gray-400">{{ email }}</p>
+            </div>
+        </div>
+        <div class="flex gap-3 text-sm">
+            <a href="/netlify/logout" class="text-red-500 hover:text-red-400">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 max-w-7xl">
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <div class="stat-card">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-users text-cyan-400"></i>
+                    <p class="text-[10px] text-gray-500">TOTAL USERS</p>
+                </div>
+                <p class="text-3xl font-bold text-cyan-400">{{ total_users }}</p>
+            </div>
+            <div class="stat-card">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-globe text-green-400"></i>
+                    <p class="text-[10px] text-gray-500">TOTAL SITES</p>
+                </div>
+                <p class="text-3xl font-bold text-green-400">{{ total_sites }}</p>
+            </div>
+            <div class="stat-card">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-hdd text-purple-400"></i>
+                    <p class="text-[10px] text-gray-500">DISK USED</p>
+                </div>
+                <p class="text-3xl font-bold text-purple-400">{{ total_size }}</p>
+            </div>
+            <div class="stat-card">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-user-check text-yellow-400"></i>
+                    <p class="text-[10px] text-gray-500">ACTIVE NOW</p>
+                </div>
+                <p class="text-3xl font-bold text-yellow-400">{{ total_active }}</p>
+            </div>
+        </div>
+
+        <!-- BULK CONTROL BAR -->
+        <div class="bulk-bar mb-6">
+            <div class="flex items-center justify-between flex-wrap gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-layer-group text-cyan-400 text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-white">Bulk Server Control</p>
+                        <p class="text-[10px] text-gray-500">সব সার্ভার একসাথে নিয়ন্ত্রণ করুন</p>
+                    </div>
+                </div>
+                <div class="flex gap-2 flex-wrap">
+                    <button onclick="bulkAction('start')" id="bulkStartBtn" class="control-btn btn-start">
+                        <i class="fas fa-play"></i> Start All
+                    </button>
+                    <button onclick="bulkAction('stop')" id="bulkStopBtn" class="control-btn btn-stop">
+                        <i class="fas fa-stop"></i> Stop All
+                    </button>
+                    <button onclick="bulkAction('restart')" id="bulkRestartBtn" class="control-btn btn-restart">
+                        <i class="fas fa-sync-alt"></i> Restart All
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-4 mb-6 flex justify-between items-center flex-wrap gap-3">
+            <div class="flex gap-2">
+                <button onclick="openCreateModal()" 
+                    class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg text-sm font-bold transition">
+                    <i class="fas fa-user-plus mr-2"></i>Create User
+                </button>
+                <button onclick="refreshData()" 
+                    class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm transition">
+                    <i class="fas fa-sync-alt mr-2"></i>Refresh
+                </button>
+            </div>
+            <input type="text" id="searchInput" onkeyup="filterUsers()" placeholder="Search users..."
+                class="bg-[#0c0e14] border border-gray-700 rounded-lg px-4 py-2 text-sm text-white outline-none focus:border-cyan-500 max-w-xs">
+        </div>
+
+        <div class="card p-4">
+            <h3 class="text-sm font-bold mb-4 text-cyan-400">
+                <i class="fas fa-users mr-2"></i>All Netlify Users
+            </h3>
+
+            <div id="usersList" class="space-y-3">
+                {% if users %}
+                    {% for u in users %}
+                    <div class="user-row bg-[#0c0e14] border border-gray-800 rounded-lg p-4 hover:border-cyan-500/30 transition"
+                         data-username="{{ u.username|lower }}">
+                        <div class="flex justify-between items-start flex-wrap gap-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 bg-gradient-to-br from-cyan-600 to-blue-700 rounded-xl flex items-center justify-center">
+                                    <i class="fas fa-user text-white text-lg"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-white">{{ u.username }}</p>
+                                    <p class="text-[11px] text-gray-500">
+                                        <i class="fas fa-envelope mr-1"></i>{{ u.email }}
+                                    </p>
+                                    <p class="text-[11px] text-gray-500">
+                                        <i class="fas fa-calendar mr-1"></i>Created: {{ u.created }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-3 flex-wrap">
+                                <div class="text-center">
+                                    <p class="text-[10px] text-gray-500 mb-1">SITES</p>
+                                    <p class="text-xs font-bold">
+                                        <span class="{% if u.site_limit > 0 and u.site_count >= u.site_limit %}text-red-400{% else %}text-cyan-400{% endif %}">
+                                            {{ u.site_count }}
+                                        </span>
+                                        <span class="text-gray-500">/ {{ u.site_limit if u.site_limit > 0 else '∞' }}</span>
+                                    </p>
+                                    {% if u.site_limit > 0 %}
+                                    <div class="progress-bar" style="width:60px;">
+                                        <div class="progress-fill" 
+                                             style="width:{{ (u.site_count / u.site_limit * 100) if u.site_limit > 0 else 0 }}%; 
+                                                    background:{% if u.site_count >= u.site_limit %}#ef4444{% elif u.site_count >= u.site_limit * 0.8 %}#f59e0b{% else %}#06b6d4{% endif %};">
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="text-center">
+                                    <p class="text-[10px] text-gray-500 mb-1">EXPIRES</p>
+                                    {% if u.days_left is none %}
+                                        <span class="badge badge-cyan">NEVER</span>
+                                    {% elif u.days_left < 0 %}
+                                        <span class="badge badge-red">EXPIRED</span>
+                                    {% elif u.days_left == 0 %}
+                                        <span class="badge badge-yellow">TODAY</span>
+                                    {% elif u.days_left <= 3 %}
+                                        <span class="badge badge-yellow">{{ u.days_left }}d left</span>
+                                    {% else %}
+                                        <span class="badge badge-green">{{ u.days_left }}d left</span>
+                                    {% endif %}
+                                    <p class="text-[9px] text-gray-500 mt-1">{{ u.expires }}</p>
+                                </div>
+
+                                <div class="text-center">
+                                    <p class="text-[10px] text-gray-500 mb-1">STATUS</p>
+                                    <span class="badge {% if u.active %}badge-green{% else %}badge-red{% endif %}">
+                                        {% if u.active %}ACTIVE{% else %}DISABLED{% endif %}
+                                    </span>
+                                </div>
+
+                                <div class="flex gap-1">
+                                    <button onclick="editUser('{{ u.username }}', {{ u.site_limit }}, '{{ u.expires_raw }}')"
+                                        class="bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-400 px-3 py-1.5 rounded-lg text-xs transition"
+                                        title="Edit Limits">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="toggleUser('{{ u.username }}')"
+                                        class="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-lg text-xs transition"
+                                        title="{% if u.active %}Disable{% else %}Enable{% endif %}">
+                                        <i class="fas fa-{% if u.active %}ban{% else %}check{% endif %}"></i>
+                                    </button>
+                                    <button onclick="resetPassword('{{ u.username }}')"
+                                        class="bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-400 px-3 py-1.5 rounded-lg text-xs transition"
+                                        title="Reset Password">
+                                        <i class="fas fa-key"></i>
+                                    </button>
+                                    <button onclick="deleteUser('{{ u.username }}')"
+                                        class="bg-red-600/20 hover:bg-red-600/30 text-red-400 px-3 py-1.5 rounded-lg text-xs transition"
+                                        title="Delete User">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SINGLE SERVER CONTROL -->
+                        <div class="mt-3 pt-3 border-t border-gray-800">
+                            <p class="text-[10px] text-gray-500 mb-2 flex items-center gap-1">
+                                <i class="fas fa-server text-cyan-400"></i>
+                                <b class="text-cyan-400">SERVER CONTROL:</b>
+                                <span class="text-gray-600">(একক সার্ভার নিয়ন্ত্রণ)</span>
+                            </p>
+                            <div class="flex gap-2 flex-wrap">
+                                <button onclick="singleAction('{{ u.username }}', 'start')" class="control-btn btn-start">
+                                    <i class="fas fa-play"></i> Start
+                                </button>
+                                <button onclick="singleAction('{{ u.username }}', 'stop')" class="control-btn btn-stop">
+                                    <i class="fas fa-stop"></i> Stop
+                                </button>
+                                <button onclick="singleAction('{{ u.username }}', 'restart')" class="control-btn btn-restart">
+                                    <i class="fas fa-sync-alt"></i> Restart
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- CREDENTIALS -->
+                        <div class="mt-3 pt-3 border-t border-gray-800">
+                            <p class="text-[10px] text-gray-500 mb-2 flex items-center gap-1">
+                                <i class="fas fa-key text-yellow-400"></i>
+                                <b class="text-yellow-400">LOGIN CREDENTIALS:</b>
+                                <span class="text-gray-600">(ইউজারকে পাঠানোর জন্য)</span>
+                            </p>
+                            <div class="cred-box">
+                                <div class="cred-item">
+                                    <div class="cred-label">👤 Username</div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="cred-value">{{ u.username }}</span>
+                                        <button class="btn-mini" onclick="copyToClipboard('{{ u.username }}')">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="cred-item">
+                                    <div class="cred-label">🔒 Password</div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="cred-value password">{{ u.password_plain or '—' }}</span>
+                                        {% if u.password_plain and u.password_plain != '—' %}
+                                        <button class="btn-mini" onclick="copyToClipboard('{{ u.password_plain }}')">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="cred-item">
+                                    <div class="cred-label">📧 Email</div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="cred-value link">{{ u.email }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-2 flex gap-2">
+                                <button class="btn-mini" style="padding: 5px 12px; font-size: 10px;" 
+                                    onclick="copyAll('{{ u.username }}', '{{ u.password_plain }}', '{{ u.email }}', '{{ u.login_url }}')">
+                                    <i class="fas fa-copy mr-1"></i>Copy All Info
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- SERVER LINK -->
+                        <div class="mt-3 pt-3 border-t border-gray-800">
+                            <p class="text-[10px] text-gray-500 mb-2 flex items-center gap-1">
+                                <i class="fas fa-link text-cyan-400"></i>
+                                <b class="text-cyan-400">SERVER LINK:</b>
+                            </p>
+                            <div class="server-link-box">
+                                <i class="fas fa-globe text-cyan-400"></i>
+                                <div class="server-link-url" title="{{ u.login_url }}">{{ u.login_url }}</div>
+                                <button class="btn-copy" onclick="copyToClipboard('{{ u.login_url }}')">
+                                    <i class="fas fa-copy mr-1"></i>Copy
+                                </button>
+                                <a href="{{ u.login_url }}" target="_blank" class="btn-visit">
+                                    <i class="fas fa-external-link-alt"></i>Visit
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- DEPLOYED SITES -->
+                        {% if u.sites %}
+                        <div class="mt-3 pt-3 border-t border-gray-800">
+                            <p class="text-[10px] text-gray-500 mb-2">
+                                <i class="fas fa-globe mr-1 text-green-400"></i>
+                                <b class="text-green-400">DEPLOYED SITES ({{ u.sites|length }}):</b>
+                            </p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                                {% for s in u.sites %}
+                                <div class="bg-[#12141c] border border-gray-800 rounded p-2">
+                                    <div class="flex justify-between items-center">
+                                        <div class="min-w-0 flex-1">
+                                            <p class="text-xs text-cyan-400 font-mono truncate">{{ s.name }}</p>
+                                            <a href="{{ s.url }}" target="_blank" class="text-[10px] text-gray-500 hover:text-cyan-400 truncate block">
+                                                {{ s.url }}
+                                            </a>
+                                        </div>
+                                        <button onclick="adminDeleteSite('{{ s.name }}')"
+                                            class="text-red-400 hover:text-red-300 px-2 ml-2"
+                                            title="Delete">
+                                            <i class="fas fa-times text-xs"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-gray-500 py-12">
+                        <i class="fas fa-users text-5xl mb-3 opacity-30"></i>
+                        <p>No users yet. Create one to get started.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Create User Modal -->
+    <div id="createModal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 z-50">
+        <div class="bg-[#12141c] w-full max-w-md rounded-xl border border-cyan-500/30 p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-cyan-400 font-bold">
+                    <i class="fas fa-user-plus mr-2"></i>Create Netlify User
+                </h3>
+                <button onclick="closeModal()" class="text-red-500 text-2xl">&times;</button>
+            </div>
+
+            <div class="mb-3">
+                <label class="block text-gray-400 text-xs mb-1.5">Username *</label>
+                <input type="text" id="newUsername" placeholder="john_doe"
+                    class="w-full bg-[#0c0e14] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-cyan-500">
+            </div>
+
+            <div class="mb-3">
+                <label class="block text-gray-400 text-xs mb-1.5">Email</label>
+                <input type="email" id="newEmail" placeholder="john@example.com"
+                    class="w-full bg-[#0c0e14] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-cyan-500">
+            </div>
+
+            <div class="mb-3">
+                <label class="block text-gray-400 text-xs mb-1.5">Password * (min 6 chars)</label>
+                <input type="text" id="newPassword" placeholder="Password123"
+                    class="w-full bg-[#0c0e14] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-cyan-500 font-mono">
+                <button onclick="generatePass()" class="text-[10px] text-cyan-400 mt-1">
+                    <i class="fas fa-dice mr-1"></i>Generate random password
+                </button>
+            </div>
+
+            <div class="mb-3 p-3 bg-cyan-500/5 border border-cyan-500/20 rounded-lg">
+                <label class="block text-cyan-400 text-xs mb-1.5 font-bold">
+                    <i class="fas fa-globe mr-1"></i>Maximum Sites Allowed *
+                </label>
+                <input type="number" id="newSiteLimit" value="3" min="0" max="1000"
+                    class="w-full bg-[#0c0e14] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-cyan-500">
+                <p class="text-[10px] text-gray-500 mt-1">
+                    কতটি HTML/সাইট deploy করতে পারবে। <b class="text-cyan-400">0 = Unlimited</b>
+                </p>
+            </div>
+
+            <div class="mb-4 p-3 bg-yellow-500/5 border border-yellow-500/20 rounded-lg">
+                <label class="block text-yellow-400 text-xs mb-1.5 font-bold">
+                    <i class="fas fa-clock mr-1"></i>Account Validity (Days) *
+                </label>
+                <input type="number" id="newExpiryDays" value="30" min="0" max="3650"
+                    class="w-full bg-[#0c0e14] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-cyan-500">
+                <p class="text-[10px] text-gray-500 mt-1">
+                    কত দিন পর অ্যাকাউন্ট expire হবে। <b class="text-yellow-400">0 = Never expires</b>
+                </p>
+                <p class="text-[10px] text-gray-600 mt-1" id="expiryPreview"></p>
+            </div>
+
+            <button onclick="createUser()"
+                class="w-full bg-cyan-600 hover:bg-cyan-500 py-2.5 rounded-lg text-sm font-bold transition">
+                <i class="fas fa-check mr-2"></i>Create User
+            </button>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 z-50">
+        <div class="bg-[#12141c] w-full max-w-md rounded-xl border border-yellow-500/30 p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-yellow-400 font-bold">
+                    <i class="fas fa-edit mr-2"></i>Edit User: <span id="editUsername"></span>
+                </h3>
+                <button onclick="closeEditModal()" class="text-red-500 text-2xl">&times;</button>
+            </div>
+
+            <input type="hidden" id="editUsernameInput">
+
+            <div class="mb-3 p-3 bg-cyan-500/5 border border-cyan-500/20 rounded-lg">
+                <label class="block text-cyan-400 text-xs mb-1.5 font-bold">
+                    <i class="fas fa-globe mr-1"></i>Maximum Sites Allowed
+                </label>
+                <input type="number" id="editSiteLimit" min="0" max="1000"
+                    class="w-full bg-[#0c0e14] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-cyan-500">
+                <p class="text-[10px] text-gray-500 mt-1">
+                    <b class="text-cyan-400">0 = Unlimited</b>
+                </p>
+            </div>
+
+            <div class="mb-4 p-3 bg-yellow-500/5 border border-yellow-500/20 rounded-lg">
+                <label class="block text-yellow-400 text-xs mb-1.5 font-bold">
+                    <i class="fas fa-clock mr-1"></i>Extend Validity (Days from today)
+                </label>
+                <input type="number" id="editExpiryDays" min="0" max="3650"
+                    class="w-full bg-[#0c0e14] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-cyan-500">
+                <p class="text-[10px] text-gray-500 mt-1">
+                    আজ থেকে কত দিন যোগ হবে। <b class="text-yellow-400">0 = Never expires</b>
+                </p>
+                <p class="text-[10px] text-gray-600 mt-1" id="editExpiryPreview"></p>
+            </div>
+
+            <button onclick="saveEditUser()"
+                class="w-full bg-yellow-600 hover:bg-yellow-500 py-2.5 rounded-lg text-sm font-bold transition">
+                <i class="fas fa-save mr-2"></i>Save Changes
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function showToast(message, type='info', duration=4000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            let icon = '';
+            if (type === 'success') icon = '<i class="fas fa-check-circle text-green-400 text-lg"></i>';
+            else if (type === 'error') icon = '<i class="fas fa-times-circle text-red-400 text-lg"></i>';
+            else if (type === 'warning') icon = '<i class="fas fa-exclamation-triangle text-yellow-400 text-lg"></i>';
+            else icon = '<i class="fas fa-info-circle text-cyan-400 text-lg"></i>';
+            toast.innerHTML = `
+                <div>${icon}</div>
+                <div class="flex-1"><p class="text-sm">${message}</p></div>
+                <button onclick="this.parentElement.remove()" class="text-gray-500">
+                    <i class="fas fa-times text-xs"></i>
+                </button>`;
+            container.appendChild(toast);
+            if (duration > 0) setTimeout(() => toast.remove(), duration);
+        }
+
+        function copyToClipboard(text) {
+            if (!text || text === '—') {
+                showToast('Nothing to copy!', 'error', 2000);
+                return;
+            }
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('✅ Copied!', 'success', 1500);
+            }).catch(() => {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                showToast('✅ Copied!', 'success', 1500);
+            });
+        }
+
+        function copyAll(username, password, email, url) {
+            const text = `📦 NETLIFY HOSTING ACCESS\n\n` +
+                         `🔗 Login URL: ${url}\n` +
+                         `👤 Username: ${username}\n` +
+                         `🔒 Password: ${password}\n` +
+                         `📧 Email: ${email}\n\n` +
+                         `⚠️ এই credentials গোপন রাখুন।`;
+            copyToClipboard(text);
+        }
+
+        function bulkAction(action) {
+            const actionNames = { start: 'Starting', stop: 'Stopping', restart: 'Restarting' };
+            const confirmMsg = `Are you sure you want to ${action.toUpperCase()} ALL servers?`;
+            if (!confirm(confirmMsg)) return;
+
+            document.getElementById('bulkStartBtn').disabled = true;
+            document.getElementById('bulkStopBtn').disabled = true;
+            document.getElementById('bulkRestartBtn').disabled = true;
+
+            showToast(`${actionNames[action]} all servers...`, 'info', 3000);
+
+            fetch('/netlify/admin/bulk_action', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({action: action})
+            })
+            .then(r => r.json())
+            .then(d => {
+                document.getElementById('bulkStartBtn').disabled = false;
+                document.getElementById('bulkStopBtn').disabled = false;
+                document.getElementById('bulkRestartBtn').disabled = false;
+
+                if (d.status === 'success') {
+                    showToast(`✅ ${d.msg}`, 'success', 4000);
+                } else {
+                    showToast(`❌ ${d.msg}`, 'error', 4000);
+                }
+            })
+            .catch(err => {
+                document.getElementById('bulkStartBtn').disabled = false;
+                document.getElementById('bulkStopBtn').disabled = false;
+                document.getElementById('bulkRestartBtn').disabled = false;
+                showToast('❌ Connection failed!', 'error', 4000);
+            });
+        }
+
+        function singleAction(username, action) {
+            const actionNames = { start: 'Starting', stop: 'Stopping', restart: 'Restarting' };
+            showToast(`${actionNames[action]} server "${username}"...`, 'info', 3000);
+
+            fetch(`/netlify/admin/single_action/${username}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({action: action})
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.status === 'success') {
+                    showToast(`✅ ${d.msg}`, 'success', 3000);
+                } else {
+                    showToast(`❌ ${d.msg}`, 'error', 4000);
+                }
+            })
+            .catch(err => {
+                showToast('❌ Connection failed!', 'error', 4000);
+            });
+        }
+
+        function openCreateModal() {
+            document.getElementById('createModal').classList.remove('hidden');
+            document.getElementById('newUsername').value = '';
+            document.getElementById('newEmail').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('newSiteLimit').value = '3';
+            document.getElementById('newExpiryDays').value = '30';
+            updateExpiryPreview();
+        }
+
+        function closeModal() {
+            document.getElementById('createModal').classList.add('hidden');
+        }
+
+        function generatePass() {
+            const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let pass = '';
+            for (let i = 0; i < 12; i++) pass += chars[Math.floor(Math.random() * chars.length)];
+            document.getElementById('newPassword').value = pass;
+        }
+
+        function updateExpiryPreview() {
+            const days = parseInt(document.getElementById('newExpiryDays').value) || 0;
+            const preview = document.getElementById('expiryPreview');
+            if (days === 0) {
+                preview.innerHTML = '✅ Never expires (permanent account)';
+                preview.className = 'text-[10px] text-green-400 mt-1';
+            } else {
+                const date = new Date();
+                date.setDate(date.getDate() + days);
+                const formatted = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                preview.innerHTML = `📅 Will expire on: <b>${formatted}</b>`;
+                preview.className = 'text-[10px] text-yellow-400 mt-1';
+            }
+        }
+
+        document.getElementById('newExpiryDays').addEventListener('input', updateExpiryPreview);
+
+        function createUser() {
+            const username = document.getElementById('newUsername').value.trim();
+            const email = document.getElementById('newEmail').value.trim();
+            const password = document.getElementById('newPassword').value.trim();
+            const siteLimit = parseInt(document.getElementById('newSiteLimit').value) || 0;
+            const expiryDays = parseInt(document.getElementById('newExpiryDays').value) || 0;
+
+            if (!username || !password) {
+                showToast('Username and password are required!', 'error');
+                return;
+            }
+            if (password.length < 6) {
+                showToast('Password must be 6+ characters!', 'error');
+                return;
+            }
+
+            fetch('/netlify/admin/create_user', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    username, email, password,
+                    site_limit: siteLimit,
+                    expiry_days: expiryDays
+                })
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.status === 'success') {
+                    showToast(`User "${username}" created! Password: ${password}`, 'success', 8000);
+                    closeModal();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast(d.msg || 'Failed!', 'error');
+                }
+            })
+            .catch(() => showToast('Connection failed!', 'error'));
+        }
+
+        function editUser(username, siteLimit, expiresRaw) {
+            document.getElementById('editModal').classList.remove('hidden');
+            document.getElementById('editUsername').textContent = username;
+            document.getElementById('editUsernameInput').value = username;
+            document.getElementById('editSiteLimit').value = siteLimit;
+
+            let daysLeft = 0;
+            if (expiresRaw) {
+                try {
+                    const expDate = new Date(expiresRaw.replace(' ', 'T'));
+                    const now = new Date();
+                    daysLeft = Math.max(0, Math.ceil((expDate - now) / (1000 * 60 * 60 * 24)));
+                } catch(e) { daysLeft = 0; }
+            }
+            document.getElementById('editExpiryDays').value = daysLeft;
+            updateEditExpiryPreview();
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        function updateEditExpiryPreview() {
+            const days = parseInt(document.getElementById('editExpiryDays').value) || 0;
+            const preview = document.getElementById('editExpiryPreview');
+            if (days === 0) {
+                preview.innerHTML = '✅ Never expires (permanent account)';
+                preview.className = 'text-[10px] text-green-400 mt-1';
+            } else {
+                const date = new Date();
+                date.setDate(date.getDate() + days);
+                const formatted = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                preview.innerHTML = `📅 New expiry: <b>${formatted}</b>`;
+                preview.className = 'text-[10px] text-yellow-400 mt-1';
+            }
+        }
+
+        document.getElementById('editExpiryDays').addEventListener('input', updateEditExpiryPreview);
+
+        function saveEditUser() {
+            const username = document.getElementById('editUsernameInput').value;
+            const siteLimit = parseInt(document.getElementById('editSiteLimit').value) || 0;
+            const expiryDays = parseInt(document.getElementById('editExpiryDays').value) || 0;
+
+            fetch(`/netlify/admin/update_user/${username}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    site_limit: siteLimit,
+                    expiry_days: expiryDays
+                })
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.status === 'success') {
+                    showToast('User updated!', 'success', 2000);
+                    closeEditModal();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast(d.msg || 'Failed!', 'error');
+                }
+            })
+            .catch(() => showToast('Connection failed!', 'error'));
+        }
+
+        function deleteUser(username) {
+            if (!confirm(`Delete user "${username}" and ALL their sites?`)) return;
+            fetch(`/netlify/admin/delete_user/${username}`, {method: 'POST'})
+                .then(r => r.json())
+                .then(d => {
+                    if (d.status === 'success') {
+                        showToast('User deleted!', 'warning', 2000);
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showToast(d.msg || 'Failed!', 'error');
+                    }
+                });
+        }
+
+        function toggleUser(username) {
+            fetch(`/netlify/admin/toggle_user/${username}`, {method: 'POST'})
+                .then(r => r.json())
+                .then(d => {
+                    if (d.status === 'success') {
+                        showToast(d.msg, 'success', 2000);
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showToast(d.msg || 'Failed!', 'error');
+                    }
+                });
+        }
+
+        function resetPassword(username) {
+            const newPass = prompt(`New password for "${username}":`);
+            if (!newPass || newPass.length < 6) {
+                if (newPass) showToast('Password must be 6+ chars!', 'error');
+                return;
+            }
+            fetch(`/netlify/admin/reset_password/${username}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({new_password: newPass})
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.status === 'success') {
+                    showToast(`Password reset to: ${newPass}`, 'success', 6000);
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast(d.msg || 'Failed!', 'error');
+                }
+            });
+        }
+
+        function adminDeleteSite(siteName) {
+            if (!confirm(`Delete site "${siteName}"?`)) return;
+            fetch('/netlify/admin/delete_site', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({site_name: siteName})
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.status === 'success') {
+                    showToast('Site deleted!', 'warning', 2000);
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast(d.msg || 'Failed!', 'error');
+                }
+            });
+        }
+
+        function refreshData() {
+            location.reload();
+        }
+
+        function filterUsers() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            document.querySelectorAll('.user-row').forEach(row => {
+                const username = row.getAttribute('data-username') || '';
+                row.style.display = username.includes(query) ? '' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>

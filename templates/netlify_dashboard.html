@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netlify Dashboard | ALAMIN HOSTING</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background: #0c0e14; color: #fff; font-family: 'Segoe UI', sans-serif; }
+        .github-card { background:#12141c; border:1px solid #2a2d37; border-radius:12px; padding:20px; }
+        .github-card:hover { border-color:#06b6d4; }
+        .mini-terminal { 
+            background:#0b0b0e; font-family:'Courier New',monospace; 
+            height:200px; overflow-y:auto; padding:12px; color:#a0a0a0; 
+            border:1px solid #222; border-radius:8px; font-size:11px; 
+            white-space:pre-wrap; line-height:1.4; 
+        }
+        .mini-terminal::-webkit-scrollbar { width:4px; }
+        .mini-terminal::-webkit-scrollbar-track { background:#111; }
+        .mini-terminal::-webkit-scrollbar-thumb { background:#06b6d4; border-radius:2px; }
+
+        .toast-container { position:fixed; bottom:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px; }
+        .toast { background:#1a1d27; border:1px solid #2a2d37; border-radius:12px; padding:14px 18px; min-width:300px; max-width:380px; display:flex; align-items:center; gap:12px; animation:slideIn 0.3s ease-out; box-shadow:0 10px 40px rgba(0,0,0,0.5); }
+        .toast.success { border-left:4px solid #10b981; }
+        .toast.error { border-left:4px solid #ef4444; }
+        .toast.info { border-left:4px solid #06b6d4; }
+        .toast.warning { border-left:4px solid #f59e0b; }
+        @keyframes slideIn { from{transform:translateX(400px);opacity:0} to{transform:translateX(0);opacity:1} }
+        @keyframes slideOut { from{transform:translateX(0);opacity:1} to{transform:translateX(400px);opacity:0} }
+        .spinner { width:20px;height:20px;border:3px solid #2a2d37;border-top:3px solid #06b6d4;border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0; }
+        @keyframes spin { to{transform:rotate(360deg)} }
+        .stat-card { background:#12141c; border:1px solid #1e2130; border-radius:12px; padding:16px; transition:all 0.3s; }
+        .stat-card:hover { border-color:#06b6d4; transform:translateY(-2px); }
+    </style>
+</head>
+<body>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <header class="h-16 bg-[#12141c] border-b border-gray-800 flex items-center px-6 justify-between sticky top-0 z-10">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-700">
+                <i class="fas fa-rocket text-white"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-black">NETLIFY <span class="text-cyan-400">HOSTING</span></h1>
+                <p class="text-[10px] text-gray-400">{{ username }}</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="text-xs text-gray-400 hidden md:block">
+                <i class="fas fa-circle text-green-500 text-[8px] mr-1"></i>
+                Logged in
+            </span>
+            <a href="/netlify/logout" class="text-red-500 hover:text-red-400 text-sm">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 max-w-7xl">
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <div class="stat-card">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-globe text-cyan-400"></i>
+                    <p class="text-[10px] text-gray-500">MY SITES</p>
+                </div>
+                <p class="text-2xl font-bold text-cyan-400">
+                    <span id="totalSites">0</span>
+                    <span class="text-sm text-gray-500">/ {{ site_limit if site_limit > 0 else '∞' }}</span>
+                </p>
+            </div>
+            <div class="stat-card">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-check-circle text-green-400"></i>
+                    <p class="text-[10px] text-gray-500">STATUS</p>
+                </div>
+                <p class="text-sm font-bold text-green-400">ACTIVE</p>
+            </div>
+            <div class="stat-card">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-clock text-yellow-400"></i>
+                    <p class="text-[10px] text-gray-500">EXPIRES</p>
+                </div>
+                <p class="text-xs font-bold text-yellow-400">{{ expires }}</p>
+                {% if days_left is not none %}
+                <p class="text-[10px] text-gray-500">{{ days_left }} day(s) left</p>
+                {% endif %}
+            </div>
+            <div class="stat-card">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-info-circle text-blue-400"></i>
+                    <p class="text-[10px] text-gray-500">PLAN</p>
+                </div>
+                <p class="text-xs font-bold text-blue-400">
+                    {% if site_limit > 0 %}{{ site_limit }} Sites{% else %}Unlimited{% endif %}
+                </p>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4 mb-6">
+            <div class="github-card" style="border-color:#06b6d4;">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-cloud-upload-alt text-cyan-400 text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm">Deploy New Site</h3>
+                        <p class="text-gray-500 text-[10px]">Upload files → Get live URL</p>
+                    </div>
+                </div>
+
+                <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-2.5 mb-3">
+                    <p class="text-[10px] text-yellow-300">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        <b>index.html আবশ্যক!</b> আপনার আপলোডে অবশ্যই <code class="bg-black/30 px-1 rounded">index.html</code> থাকতে হবে।
+                    </p>
+                </div>
+
+                <label class="text-gray-400 text-[11px] mb-1.5 block">Site Name (optional)</label>
+                <input type="text" id="siteName" placeholder="my-site (auto-generate if empty)"
+                    class="w-full bg-[#0c0e14] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white focus:border-cyan-500 outline-none mb-3">
+
+                <label class="text-gray-400 text-[11px] mb-1.5 block">
+                    Upload Files <span class="text-cyan-400">(multiple)</span> or ZIP
+                </label>
+                <input type="file" id="netlifyFile" multiple
+                    accept=".html,.htm,.zip,.css,.js,.png,.jpg,.jpeg,.gif,.svg,.ico,.json,.txt,.woff,.woff2,.ttf,.map"
+                    class="w-full bg-[#0c0e14] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white file:bg-cyan-600 file:border-0 file:text-white file:px-3 file:py-1 file:rounded file:mr-3 file:cursor-pointer mb-2">
+
+                <div id="fileList" class="text-[10px] text-gray-500 mb-3 min-h-[20px]">
+                    No files selected
+                </div>
+
+                <button onclick="deploySite()" id="deployBtn"
+                    class="w-full bg-cyan-600 hover:bg-cyan-500 py-2.5 rounded-lg text-sm font-bold transition disabled:opacity-50">
+                    <i class="fas fa-rocket mr-2"></i>Deploy Now
+                </button>
+            </div>
+
+            <div class="github-card" style="border-color:#10b981;">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-link text-green-400 text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm">Live URL</h3>
+                        <p class="text-gray-500 text-[10px]">Your deployed site</p>
+                    </div>
+                </div>
+                <div id="result" class="bg-[#0c0e14] border border-gray-700 rounded-lg p-4 min-h-[200px] flex items-center justify-center text-center">
+                    <p class="text-gray-500 text-xs">
+                        <i class="fas fa-rocket text-3xl mb-2 opacity-30 block"></i>
+                        No site deployed yet
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="github-card mb-6">
+            <div class="flex justify-between items-center mb-2">
+                <h4 class="text-xs text-gray-400 flex items-center gap-2">
+                    <i class="fas fa-terminal text-cyan-500"></i> Deployment Terminal
+                </h4>
+                <button onclick="clearLogs()" 
+                    class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-[11px] transition">
+                    <i class="fas fa-eraser mr-1"></i>Clear
+                </button>
+            </div>
+            <div class="mini-terminal" id="logs">> Ready to deploy...</div>
+        </div>
+
+        <div class="github-card">
+            <h4 class="text-xs text-gray-400 mb-3 flex items-center gap-2">
+                <i class="fas fa-list text-cyan-500"></i> My Deployed Sites
+            </h4>
+            <div id="sitesList" class="space-y-2">
+                <p class="text-gray-600 text-center py-6 text-sm">No sites deployed yet</p>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const USERNAME = '{{ username }}';
+        const SITE_LIMIT = {{ site_limit if site_limit > 0 else 0 }};
+
+        function showToast(message, type='info', duration=4000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            let icon = '';
+            if (type === 'info') icon = '<div class="spinner"></div>';
+            else if (type === 'success') icon = '<i class="fas fa-check-circle text-green-400 text-lg"></i>';
+            else if (type === 'error') icon = '<i class="fas fa-times-circle text-red-400 text-lg"></i>';
+            else if (type === 'warning') icon = '<i class="fas fa-exclamation-triangle text-yellow-400 text-lg"></i>';
+            toast.innerHTML = `
+                <div class="flex-shrink-0">${icon}</div>
+                <div class="flex-1"><p class="text-sm">${message}</p></div>
+                <button onclick="this.parentElement.remove();" class="text-gray-500 hover:text-gray-300">
+                    <i class="fas fa-times text-xs"></i>
+                </button>`;
+            container.appendChild(toast);
+            if (duration > 0 && type !== 'info') {
+                setTimeout(() => {
+                    toast.style.animation = 'slideOut 0.3s ease-out forwards';
+                    setTimeout(() => toast.remove(), 300);
+                }, duration);
+            }
+        }
+
+        function appendLog(msg) {
+            const el = document.getElementById('logs');
+            el.innerHTML += `\n${msg}`;
+            el.scrollTop = el.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '> Terminal cleared.';
+            showToast('Logs cleared!', 'success', 1500);
+        }
+
+        document.getElementById('netlifyFile').addEventListener('change', function() {
+            const listEl = document.getElementById('fileList');
+            const files = this.files;
+            if (!files || files.length === 0) {
+                listEl.innerHTML = '<span class="text-gray-600">No files selected</span>';
+                return;
+            }
+
+            let totalSize = 0;
+            let hasIndex = false;
+            let hasZip = false;
+            let html = `<div class="text-cyan-400 font-bold mb-1">${files.length} file(s):</div>`;
+
+            for (let i = 0; i < files.length; i++) {
+                const f = files[i];
+                totalSize += f.size;
+                const lname = f.name.toLowerCase();
+                if (lname === 'index.html') hasIndex = true;
+                if (lname.endsWith('.zip')) hasZip = true;
+
+                const sizeStr = f.size > 1024*1024 
+                    ? (f.size/(1024*1024)).toFixed(2) + ' MB'
+                    : (f.size/1024).toFixed(1) + ' KB';
+                const isIndex = lname === 'index.html';
+                html += `<div class="flex justify-between ${isIndex ? 'text-green-400 font-bold' : ''}">
+                    <span>• ${f.name}${isIndex ? ' ✅' : ''}</span>
+                    <span class="text-gray-600">${sizeStr}</span>
+                </div>`;
+            }
+
+            const totalStr = totalSize > 1024*1024
+                ? (totalSize/(1024*1024)).toFixed(2) + ' MB'
+                : (totalSize/1024).toFixed(1) + ' KB';
+            html += `<div class="text-green-400 mt-1 font-bold">Total: ${totalStr}</div>`;
+
+            if (!hasIndex && !hasZip) {
+                html += `<div class="text-red-400 mt-2 font-bold">
+                    <i class="fas fa-exclamation-circle mr-1"></i>
+                    ⚠️ index.html missing! Deploy will fail.
+                </div>`;
+            } else if (!hasIndex && hasZip) {
+                html += `<div class="text-yellow-400 mt-2">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    ZIP detected — ensure index.html inside
+                </div>`;
+            } else {
+                html += `<div class="text-green-400 mt-2">
+                    <i class="fas fa-check-circle mr-1"></i>Ready to deploy
+                </div>`;
+            }
+            listEl.innerHTML = html;
+        });
+
+        function deploySite() {
+            const fileInput = document.getElementById('netlifyFile');
+            const btn = document.getElementById('deployBtn');
+
+            if (!fileInput.files || fileInput.files.length === 0) {
+                showToast('Please select at least one file!', 'error');
+                return;
+            }
+
+            const files = fileInput.files;
+            const fileNames = Array.from(files).map(f => f.name.toLowerCase());
+            const hasIndexHtml = fileNames.includes('index.html');
+            const hasZip = fileNames.some(n => n.endsWith('.zip'));
+
+            if (!hasIndexHtml && !hasZip) {
+                const htmlFiles = fileNames.filter(n => n.endsWith('.html') || n.endsWith('.htm'));
+                if (htmlFiles.length > 0) {
+                    showToast('❌ index.html is required! Rename one to "index.html".', 'error', 8000);
+                } else {
+                    showToast('❌ index.html is required! Add a file named exactly "index.html".', 'error', 6000);
+                }
+                return;
+            }
+
+            let siteName = document.getElementById('siteName').value.trim().toLowerCase();
+            if (!siteName) {
+                const rand = Math.random().toString(36).substring(2, 8);
+                siteName = `site-${rand}`;
+                document.getElementById('siteName').value = siteName;
+            }
+
+            if (!/^[a-z0-9-]+$/.test(siteName)) {
+                showToast('Site name: only a-z, 0-9, hyphen!', 'error');
+                return;
+            }
+
+            const fd = new FormData();
+            fd.append('site_name', siteName);
+            let totalSize = 0;
+            for (let i = 0; i < files.length; i++) {
+                fd.append('files', files[i], files[i].name);
+                totalSize += files[i].size;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading...';
+
+            const container = document.getElementById('toastContainer');
+            const progressToast = document.createElement('div');
+            progressToast.className = 'toast info';
+            progressToast.id = 'deployProgressToast';
+            progressToast.innerHTML = `
+                <div class="flex-shrink-0"><div class="spinner"></div></div>
+                <div class="flex-1">
+                    <p class="text-sm">Deploying ${files.length} file(s)...</p>
+                    <p class="text-[10px] text-gray-400">${(totalSize/1024).toFixed(1)} KB total</p>
+                </div>
+            `;
+            container.appendChild(progressToast);
+
+            appendLog(`> Starting deployment for "${siteName}"...`);
+            appendLog(`> Files: ${files.length} (${(totalSize/1024).toFixed(1)} KB)`);
+            files.forEach(f => appendLog(`>   • ${f.name}`));
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 300000);
+
+            fetch('/netlify/api/deploy', {
+                method: 'POST',
+                body: fd,
+                signal: controller.signal,
+                credentials: 'same-origin'
+            })
+            .then(async response => {
+                clearTimeout(timeoutId);
+                const text = await response.text();
+
+                console.log('[Deploy] HTTP Status:', response.status);
+                console.log('[Deploy] Response:', text.substring(0, 800));
+
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    throw new Error(`Server returned invalid response (HTTP ${response.status}). Preview: ${text.substring(0, 200)}`);
+                }
+
+                return { ok: response.ok, status: response.status, data };
+            })
+            .then(({ ok, status, data }) => {
+                const pt = document.getElementById('deployProgressToast');
+                if (pt) pt.remove();
+
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-rocket mr-2"></i>Deploy Now';
+
+                if (data.status === 'success') {
+                    showToast('✅ Site deployed successfully!', 'success');
+                    appendLog(`> ✅ Success! URL: ${data.url}`);
+
+                    document.getElementById('result').innerHTML = `
+                        <div class="w-full">
+                            <i class="fas fa-check-circle text-green-400 text-3xl mb-2"></i>
+                            <p class="text-green-400 text-xs mb-2 font-bold">Site is LIVE!</p>
+                            <a href="${data.url}" target="_blank" 
+                               class="block bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 rounded-lg px-3 py-2 text-green-300 text-xs break-all transition mb-2">
+                                <i class="fas fa-external-link-alt mr-1"></i>${data.url}
+                            </a>
+                            <button onclick="navigator.clipboard.writeText('${data.url}').then(()=>showToast('Copied!','success',1500))" 
+                                class="text-gray-400 hover:text-white text-[10px]">
+                                <i class="fas fa-copy mr-1"></i>Copy URL
+                            </button>
+                        </div>
+                    `;
+                    fileInput.value = '';
+                    document.getElementById('fileList').innerHTML = 'No files selected';
+                    loadSites();
+                } else {
+                    const errMsg = data.msg || 'Deploy failed!';
+                    showToast(errMsg, 'error', 10000);
+                    appendLog(`> ❌ ${errMsg}`);
+                    console.error('[Deploy] Error:', errMsg);
+                }
+            })
+            .catch(err => {
+                clearTimeout(timeoutId);
+                const pt = document.getElementById('deployProgressToast');
+                if (pt) pt.remove();
+
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-rocket mr-2"></i>Deploy Now';
+
+                let errMsg = err.message || 'Unknown error';
+                if (err.name === 'AbortError') {
+                    errMsg = '⏱️ Request timeout (5 min). Try smaller files.';
+                }
+
+                console.error('[Deploy] Fetch error:', err);
+                showToast('Error: ' + errMsg, 'error', 10000);
+                appendLog(`> ❌ ${errMsg}`);
+            });
+        }
+
+        function loadSites() {
+            fetch('/netlify/api/sites')
+                .then(r => r.json())
+                .then(d => {
+                    const el = document.getElementById('sitesList');
+                    const sites = d.sites || [];
+
+                    document.getElementById('totalSites').textContent = sites.length;
+
+                    if (sites.length === 0) {
+                        el.innerHTML = '<p class="text-gray-600 text-center py-6 text-sm">No sites deployed yet</p>';
+                        return;
+                    }
+
+                    el.innerHTML = sites.map(s => `
+                        <div class="flex justify-between items-center bg-[#0c0e14] border border-gray-800 rounded-lg p-3 hover:border-cyan-500/50 transition">
+                            <div class="flex items-center gap-3 min-w-0 flex-1">
+                                <div class="w-9 h-9 bg-cyan-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-globe text-cyan-400"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-white font-mono text-sm truncate font-semibold">${s.name}</p>
+                                    <a href="${s.url}" target="_blank" class="text-cyan-400 hover:underline text-[11px] truncate block">${s.url}</a>
+                                    <p class="text-gray-600 text-[10px] mt-0.5">
+                                        <i class="fas fa-clock mr-1"></i>${s.deployed || 'N/A'}
+                                        ${s.file_count ? ` · ${s.file_count} files` : ''}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex gap-1 flex-shrink-0 ml-2">
+                                <button onclick="window.open('${s.url}','_blank')" 
+                                    class="text-gray-400 hover:text-green-400 px-2 py-1" title="Open">
+                                    <i class="fas fa-external-link-alt text-xs"></i>
+                                </button>
+                                <button onclick="navigator.clipboard.writeText('${s.url}').then(()=>showToast('URL copied!','success',1500))" 
+                                    class="text-gray-400 hover:text-cyan-400 px-2 py-1" title="Copy URL">
+                                    <i class="fas fa-copy text-xs"></i>
+                                </button>
+                                <button onclick="deleteSite('${s.name}')" 
+                                    class="text-gray-400 hover:text-red-400 px-2 py-1" title="Delete">
+                                    <i class="fas fa-trash text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                });
+        }
+
+        function deleteSite(name) {
+            if (!confirm(`Delete site "${name}"?`)) return;
+            fetch('/netlify/api/delete', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({site_name: name})
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.status === 'success') {
+                    showToast('Site deleted!', 'warning', 2000);
+                    loadSites();
+                } else {
+                    showToast(d.msg || 'Failed!', 'error');
+                }
+            });
+        }
+
+        loadSites();
+        setInterval(loadSites, 15000);
+    </script>
+</body>
+</html>

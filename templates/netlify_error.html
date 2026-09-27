@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% if error_type == 'deleted' %}Account Deleted
+        {% elif error_type == 'expired' %}Account Expired
+        {% elif error_type == 'disabled' %}Account Disabled
+        {% else %}Error{% endif %}
+        | Netlify Hosting
+    </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: #0c0e14;
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+        }
+        .error-card {
+            background: #12141c;
+            border: 1px solid #2a2d37;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 520px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .icon-container {
+            width: 100px;
+            height: 100px;
+            border-radius: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .icon-deleted {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+            box-shadow: 0 10px 40px rgba(239, 68, 68, 0.4);
+        }
+        .icon-expired {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            box-shadow: 0 10px 40px rgba(245, 158, 11, 0.4);
+        }
+        .icon-disabled {
+            background: linear-gradient(135deg, #6b7280, #374151);
+            box-shadow: 0 10px 40px rgba(107, 114, 128, 0.4);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #06b6d4, #0891b2);
+            transition: all 0.3s;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(6, 182, 212, 0.4);
+        }
+        .bg-pattern {
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(239, 68, 68, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(6, 182, 212, 0.05) 0%, transparent 50%);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 bg-pattern">
+
+    <div class="error-card">
+
+        <div class="icon-container icon-{{ error_type or 'deleted' }}">
+            {% if error_type == 'deleted' %}
+                <i class="fas fa-user-slash text-white text-5xl"></i>
+            {% elif error_type == 'expired' %}
+                <i class="fas fa-clock text-white text-5xl"></i>
+            {% elif error_type == 'disabled' %}
+                <i class="fas fa-ban text-white text-5xl"></i>
+            {% else %}
+                <i class="fas fa-exclamation-triangle text-white text-5xl"></i>
+            {% endif %}
+        </div>
+
+        <h1 class="text-3xl font-black text-white mb-3">
+            {% if error_type == 'deleted' %}
+                Account <span class="text-red-500">Deleted</span>
+            {% elif error_type == 'expired' %}
+                Account <span class="text-yellow-500">Expired</span>
+            {% elif error_type == 'disabled' %}
+                Account <span class="text-gray-400">Disabled</span>
+            {% else %}
+                <span class="text-red-500">Error</span>
+            {% endif %}
+        </h1>
+
+        <p class="text-gray-400 text-sm leading-relaxed mb-6">
+            {% if error_type == 'deleted' %}
+                আপনার Netlify অ্যাকাউন্টটি অ্যাডমিন কর্তৃক <b class="text-red-400">ডিলিট</b> করা হয়েছে। 
+                আপনি আর এই অ্যাকাউন্ট দিয়ে লগইন করতে পারবেন না, এবং আপনার সব deployed সাইটও মুছে ফেলা হয়েছে।
+            {% elif error_type == 'expired' %}
+                আপনার Netlify অ্যাকাউন্টের <b class="text-yellow-400">মেয়াদ শেষ</b> হয়ে গেছে। 
+                অ্যাকাউন্ট পুনরায় সক্রিয় করতে অ্যাডমিনের সাথে যোগাযোগ করুন।
+            {% elif error_type == 'disabled' %}
+                আপনার Netlify অ্যাকাউন্টটি <b class="text-gray-400">নিষ্ক্রিয়</b> করা হয়েছে। 
+                অ্যাকাউন্ট সক্রিয় করতে অ্যাডমিনের সাথে যোগাযোগ করুন।
+            {% else %}
+                অজানা ত্রুটি ঘটেছে। অনুগ্রহ করে পরে আবার চেষ্টা করুন বা অ্যাডমিনের সাথে যোগাযোগ করুন।
+            {% endif %}
+        </p>
+
+        {% if error_type == 'deleted' %}
+        <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6 text-left">
+            <p class="text-red-300 text-xs">
+                <i class="fas fa-info-circle mr-2"></i>
+                <b>কেন এই পেজ?</b><br>
+                <span class="text-gray-400 text-[11px] mt-1 block">
+                    অ্যাডমিন প্যানেল থেকে আপনার অ্যাকাউন্ট মুছে ফেলা হয়েছে। এতে আপনার সব deploy করা সাইটও মুছে গেছে।
+                </span>
+            </p>
+        </div>
+        {% elif error_type == 'expired' %}
+        <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-6 text-left">
+            <p class="text-yellow-300 text-xs">
+                <i class="fas fa-clock mr-2"></i>
+                <b>কী করবেন?</b><br>
+                <span class="text-gray-400 text-[11px] mt-1 block">
+                    অ্যাডমিনের সাথে যোগাযোগ করে আপনার অ্যাকাউন্টের মেয়াদ বাড়ান।
+                </span>
+            </p>
+        </div>
+        {% endif %}
+
+        <div class="bg-[#0c0e14] border border-gray-800 rounded-lg p-4 mb-6 text-left">
+            <p class="text-[11px] text-gray-500 mb-2">
+                <i class="fas fa-headset mr-1"></i>Support Contact:
+            </p>
+            <a href="https://t.me/ALAMINOOPOU" target="_blank"
+                class="inline-flex items-center gap-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 px-4 py-2 rounded-lg text-sm transition">
+                <i class="fab fa-telegram-plane text-blue-400"></i>
+                <span class="text-blue-300">Telegram Support</span>
+            </a>
+        </div>
+
+        <div class="flex gap-2 justify-center flex-wrap">
+            <a href="/netlify/login" 
+                class="btn-primary px-5 py-2.5 rounded-lg text-white text-sm font-bold inline-flex items-center gap-2">
+                <i class="fas fa-sign-in-alt"></i>Try Login Again
+            </a>
+            <a href="/" 
+                class="bg-gray-700 hover:bg-gray-600 px-5 py-2.5 rounded-lg text-white text-sm font-bold transition inline-flex items-center gap-2">
+                <i class="fas fa-home"></i>Go Home
+            </a>
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-gray-800">
+            <p class="text-gray-600 text-[10px]">
+                <i class="fas fa-shield-alt mr-1"></i>
+                Netlify Hosting Platform &copy; 2026
+            </p>
+            <p class="text-gray-700 text-[10px] mt-1">
+                Error Code: <code class="bg-black/30 px-2 py-0.5 rounded">{{ error_type or 'unknown' }}</code>
+            </p>
+        </div>
+
+    </div>
+
+</body>
+</html>
